@@ -33,6 +33,7 @@ parser.add_argument('--l2_emb', default=0.0, type=float)
 parser.add_argument('--gpu', default=0, type=int)
 parser.add_argument('--print_freq', default=10, type=int)
 parser.add_argument('--k', default=10, type=int)
+parser.add_argument('--item_num', default=57590, type=int)
 
 args = parser.parse_args()
 if not os.path.isdir(args.dataset + '_' + args.train_dir):
@@ -74,7 +75,8 @@ sess.run(tf.global_variables_initializer())
 T = 0.0
 t_test = evaluate(model, dataset, args, sess)
 t_valid = evaluate_valid(model, dataset, args, sess)
-print("[0, 0.0, {0}, {1}, {2}, {3}],".format(t_valid[0], t_valid[1], t_test[0], t_test[1]))
+print_result(0, 0.0, t_valid, t_test)
+# print("[0, 0.0, {0}, {1}, {2}, {3}],".format(t_valid[0], t_valid[1], t_test[0], t_test[1]))
 
 t0 = time.time()
 
@@ -102,7 +104,9 @@ for epoch in range(1, args.num_epochs + 1):
         #print ''
         #print 'epoch:%d, time: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)' % (
         #epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1])
-        print("[{0}, {1}, {2}, {3}, {4}, {5}],".format(epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1]))
+        # print("[{0}, {1}, {2}, {3}, {4}, {5}],".format(epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1]))
+        print_result(epoch, T, t_valid, t_test)
+
         #f.write(str(t_valid) + ' ' + str(t_test) + '\n')
         #f.flush()
         t0 = time.time()

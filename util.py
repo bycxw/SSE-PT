@@ -43,6 +43,14 @@ def evaluate(model, dataset, args, sess):
     NDCG = 0.0
     HT = 0.0
     valid_user = 0.0
+    ndcg_1 = 0.0
+    hit_1 = 0.0
+    ndcg_5 = 0.0
+    hit_5 = 0.0
+    ndcg_10 = 0.0
+    hit_10 = 0.0
+    ap = 0.0
+    allitems = list(range(itemnum + 1))
 
     if usernum > 10000:
         users = random.sample(range(1, usernum + 1), 10000)
@@ -63,10 +71,13 @@ def evaluate(model, dataset, args, sess):
         rated = set(train[u])
         rated.add(0)
         item_idx = [test[u][0]]
-        for _ in range(100):
-            t = np.random.randint(1, itemnum + 1)
-            while t in rated: t = np.random.randint(1, itemnum + 1)
-            item_idx.append(t)
+        # for _ in range(100):
+        #     t = np.random.randint(1, itemnum + 1)
+        #     while t in rated: t = np.random.randint(1, itemnum + 1)
+        #     item_idx.append(t)
+
+        item_idx += allitems[:test[u][0]]
+        item_idx += allitems[test[u][0] + 1:]
 
         predictions = -model.predict(sess, [u], [seq], item_idx)
         predictions = predictions[0]
@@ -75,15 +86,35 @@ def evaluate(model, dataset, args, sess):
 
         valid_user += 1
 
-        if rank < args.k:
-            NDCG += 1 / np.log2(rank + 2)
-            HT += 1
+        if rank < 1:
+            ndcg_1 += 1
+            hit_1 += 1
+        if rank < 5:
+            ndcg_5 += 1 / np.log2(rank + 2)
+            hit_5 += 1
+        if rank < 10:
+            ndcg_10 += 1 / np.log2(rank + 2)
+            hit_10 += 1
+
+        ap += 1.0 / (rank + 1)
+
+        # if rank < args.k:
+        #     NDCG += 1 / np.log2(rank + 2)
+        #     HT += 1
         if valid_user % 1000 == 0:
             #print '.',
             sys.stdout.flush()
 
-    return NDCG / valid_user, HT / valid_user
-
+    # return NDCG / valid_user, HT / valid_user
+    result = {
+        "hr_1": hit_1 / valid_user,
+        "hr_5": hit_5 / valid_user,
+        "hr_10": hit_10 / valid_user,
+        "ndcg_5": ndcg_5 / valid_user,
+        "ndcg_10": ndcg_10 / valid_user,
+        "mrr": ap / valid_user
+    }
+    return result
 
 def evaluate_valid(model, dataset, args, sess):
     [train, valid, test, usernum, itemnum] = copy.deepcopy(dataset)
@@ -91,6 +122,15 @@ def evaluate_valid(model, dataset, args, sess):
     NDCG = 0.0
     valid_user = 0.0
     HT = 0.0
+    ndcg_1 = 0.0
+    hit_1 = 0.0
+    ndcg_5 = 0.0
+    hit_5 = 0.0
+    ndcg_10 = 0.0
+    hit_10 = 0.0
+    ap = 0.0
+    allitems = list(range(itemnum + 1))
+
     if usernum>10000:
         users = random.sample(range(1, usernum + 1), 10000)
     else:
@@ -108,10 +148,12 @@ def evaluate_valid(model, dataset, args, sess):
         rated = set(train[u])
         rated.add(0)
         item_idx = [valid[u][0]]
-        for _ in range(100):
-            t = np.random.randint(1, itemnum + 1)
-            while t in rated: t = np.random.randint(1, itemnum + 1)
-            item_idx.append(t)
+        # for _ in range(100):
+        #     t = np.random.randint(1, itemnum + 1)
+        #     while t in rated: t = np.random.randint(1, itemnum + 1)
+        #     item_idx.append(t)
+        item_idx += allitems[:test[u][0]]
+        item_idx += allitems[test[u][0] + 1:]
 
         predictions = -model.predict(sess, [u], [seq], item_idx)
         predictions = predictions[0]
@@ -119,12 +161,42 @@ def evaluate_valid(model, dataset, args, sess):
         rank = predictions.argsort().argsort()[0]
 
         valid_user += 1
+        if rank < 1:
+            ndcg_1 += 1
+            hit_1 += 1
+        if rank < 5:
+            ndcg_5 += 1 / np.log2(rank + 2)
+            hit_5 += 1
+        if rank < 10:
+            ndcg_10 += 1 / np.log2(rank + 2)
+            hit_10 += 1
 
-        if rank < args.k:
-            NDCG += 1 / np.log2(rank + 2)
-            HT += 1
+        ap += 1.0 / (rank + 1)
+        # if rank < args.k:
+        #     NDCG += 1 / np.log2(rank + 2)
+        #     HT += 1
         if valid_user % 100 == 0:
             #print '.',
             sys.stdout.flush()
 
-    return NDCG / valid_user, HT / valid_user
+    # return NDCG / valid_user, HT / valid_user
+    result = {
+        "hr_1": hit_1 / valid_user,
+        "hr_5": hit_5 / valid_user,
+        "hr_10": hit_10 / valid_user,
+        "ndcg_5": ndcg_5 / valid_user,
+        "ndcg_10": ndcg_10 / valid_user,
+        "mrr": ap / valid_user
+    }
+    return result
+
+
+def print_result(epoch, T, valid, test):
+    print("epoch: {}, time: {}".format(epoch, T))
+    print("valid:")
+    for k in valid:
+        print("{}:{}".format(k, valid[k]))
+    print("test:")
+    for k in test:
+        print("{}:{}".format(k, test[k]))
+    print("-----------------------------")

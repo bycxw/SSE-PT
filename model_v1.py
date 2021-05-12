@@ -8,6 +8,7 @@ class Model():
         self.input_seq = tf.placeholder(tf.int32, shape=(None, args.maxlen))
         self.pos = tf.placeholder(tf.int32, shape=(None, args.maxlen))
         self.neg = tf.placeholder(tf.int32, shape=(None, args.maxlen))
+        self.item_num = args.item_num
         pos = self.pos
         neg = self.neg
         mask = tf.expand_dims(tf.to_float(tf.not_equal(self.input_seq, 0)), -1)
@@ -111,15 +112,15 @@ class Model():
 
         seq_emb = tf.reshape(self.seq, [tf.shape(self.input_seq)[0] * args.maxlen, self.hidden_units])
 
-        self.test_item = tf.placeholder(tf.int32, shape=(101))
+        self.test_item = tf.placeholder(tf.int32, shape=(self.item_num))
         test_item_emb = tf.nn.embedding_lookup(item_emb_table, self.test_item)
         
-        test_user_emb = tf.tile(tf.expand_dims(u0_latent, 0), [101, 1])
+        test_user_emb = tf.tile(tf.expand_dims(u0_latent, 0), [self.item_num, 1])
         # combine item and user emb
         test_item_emb = tf.reshape(tf.concat([test_item_emb, test_user_emb], 1), [-1, self.hidden_units])
 
         self.test_logits = tf.matmul(seq_emb, tf.transpose(test_item_emb))
-        self.test_logits = tf.reshape(self.test_logits, [tf.shape(self.input_seq)[0], args.maxlen, 101])
+        self.test_logits = tf.reshape(self.test_logits, [tf.shape(self.input_seq)[0], args.maxlen, self.item_num])
         self.test_logits = self.test_logits[:, -1, :]
 
         # prediction layer
