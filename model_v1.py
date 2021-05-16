@@ -8,7 +8,6 @@ class Model():
         self.input_seq = tf.placeholder(tf.int32, shape=(None, args.maxlen))
         self.pos = tf.placeholder(tf.int32, shape=(None, args.maxlen))
         self.neg = tf.placeholder(tf.int32, shape=(None, args.maxlen))
-        self.item_num = args.item_num
         pos = self.pos
         neg = self.neg
         mask = tf.expand_dims(tf.to_float(tf.not_equal(self.input_seq, 0)), -1)
@@ -112,7 +111,7 @@ class Model():
 
         seq_emb = tf.reshape(self.seq, [tf.shape(self.input_seq)[0] * args.maxlen, self.hidden_units])
 
-        self.test_item = tf.placeholder(tf.int32, shape=(101))
+        self.test_item = tf.placeholder(tf.int32, shape=(101,))
         test_item_emb = tf.nn.embedding_lookup(item_emb_table, self.test_item)
         
         test_user_emb = tf.tile(tf.expand_dims(u0_latent, 0), [101, 1])
