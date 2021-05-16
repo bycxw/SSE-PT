@@ -50,7 +50,9 @@ def evaluate(model, dataset, args, sess):
     ndcg_10 = 0.0
     hit_10 = 0.0
     ap = 0.0
-    allitems = list(range(itemnum + 1))
+    # allitems = list(range(itemnum + 1))
+
+    prob = get_pop_distribution(dataset)
 
     if usernum > 10000:
         users = random.sample(range(1, usernum + 1), 10000)
@@ -71,14 +73,19 @@ def evaluate(model, dataset, args, sess):
         rated = set(train[u])
         rated.add(0)
         item_idx = [test[u][0]]
+        while len(item_idx) < 101:
+            sampled_ids = np.random.choice(range(1, itemnum+1), 101, replace=False, p=prob)
+            sampled_ids = [x for x in sampled_ids if x not in rated and x not in item_idx]
+            item_idx.extend(sampled_ids[:])
+        item_idx = item_idx[:101]
         # for _ in range(100):
         #     t = np.random.randint(1, itemnum + 1)
         #     while t in rated: t = np.random.randint(1, itemnum + 1)
         #     item_idx.append(t)
 
 
-        item_idx += allitems[:test[u][0]]
-        item_idx += allitems[test[u][0] + 1:]
+        # item_idx += allitems[:test[u][0]]
+        # item_idx += allitems[test[u][0] + 1:]
 
         predictions = -model.predict(sess, [u], [seq], item_idx)
         predictions = predictions[0]
@@ -152,7 +159,7 @@ def evaluate_valid(model, dataset, args, sess):
         rated.add(0)
         item_idx = [valid[u][0]]
         while len(item_idx) < 101:
-            sampled_ids = np.random.choice(range(1, itemnum+1), 101, replace=False, p=self.probability)
+            sampled_ids = np.random.choice(range(1, itemnum+1), 101, replace=False, p=prob)
             sampled_ids = [x for x in sampled_ids if x not in rated and x not in item_idx]
             item_idx.extend(sampled_ids[:])
         item_idx = item_idx[:101]
