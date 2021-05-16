@@ -2,7 +2,7 @@ import sys
 import copy
 import random
 import numpy as np
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 
 def data_partition(fname):
@@ -76,6 +76,7 @@ def evaluate(model, dataset, args, sess):
         #     while t in rated: t = np.random.randint(1, itemnum + 1)
         #     item_idx.append(t)
 
+
         item_idx += allitems[:test[u][0]]
         item_idx += allitems[test[u][0] + 1:]
 
@@ -131,6 +132,8 @@ def evaluate_valid(model, dataset, args, sess):
     ap = 0.0
     allitems = list(range(itemnum + 1))
 
+    prob = get_pop_distribution(dataset)
+
     if usernum>10000:
         users = random.sample(range(1, usernum + 1), 10000)
     else:
@@ -148,12 +151,17 @@ def evaluate_valid(model, dataset, args, sess):
         rated = set(train[u])
         rated.add(0)
         item_idx = [valid[u][0]]
+        while len(item_idx) < 101:
+            sampled_ids = np.random.choice(range(1, itemnum+1), 101, replace=False, p=self.probability)
+            sampled_ids = [x for x in sampled_ids if x not in rated and x not in item_idx]
+            item_idx.extend(sampled_ids[:])
+        item_idx = item_idx[:101]
         # for _ in range(100):
         #     t = np.random.randint(1, itemnum + 1)
         #     while t in rated: t = np.random.randint(1, itemnum + 1)
         #     item_idx.append(t)
-        item_idx += allitems[:test[u][0]]
-        item_idx += allitems[test[u][0] + 1:]
+        # item_idx += allitems[:test[u][0]]
+        # item_idx += allitems[test[u][0] + 1:]
 
         predictions = -model.predict(sess, [u], [seq], item_idx)
         predictions = predictions[0]
@@ -200,3 +208,23 @@ def print_result(epoch, T, valid, test):
     for k in test:
         print("{}:{}".format(k, test[k]))
     print("-----------------------------")
+
+
+def get_pop_distribution(dataset):
+    counter = Counter()
+    [train, valid, test, usernum, itemnum] = copy.deepcopy(dataset)
+    user_data = {
+        u:
+            [item for item in (train[u] + valid[u] + test[u])]
+        for u in train if len(train[u]) > 0 and len(valid[u]) > 0 and len(test[u]) > 0
+    }
+    for u in user_data:
+        counter.update(user_data[u])
+    total = 0
+    for i in range(1, itemnum+1):
+        total += counter[i]
+    prob = [counter[i] / total for i in range(1, itemnum+1)]
+
+    return prob
+
+
