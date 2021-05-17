@@ -206,15 +206,15 @@ def evaluate_valid(model, dataset, args, sess):
     return result
 
 
-def print_result(epoch, T, valid, test):
-    print("epoch: {}, time: {}".format(epoch, T))
-    print("valid:")
+def print_result(epoch, T, valid, test, f=sys.stdout):
+    print("epoch: {}, time: {}".format(epoch, T), f=f)
+    print("valid:", f=f)
     for k in valid:
-        print("{}:{}".format(k, valid[k]))
-    print("test:")
+        print("{}:{}".format(k, valid[k]), f=f)
+    print("test:", f=f)
     for k in test:
-        print("{}:{}".format(k, test[k]))
-    print("-----------------------------")
+        print("{}:{}".format(k, test[k]), f=f)
+    print("-----------------------------", f=f)
 
 
 def get_pop_distribution(dataset):

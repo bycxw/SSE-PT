@@ -31,7 +31,7 @@ parser.add_argument('--threshold_user', default=1.0, type=float)
 parser.add_argument('--threshold_item', default=1.0, type=float)
 parser.add_argument('--l2_emb', default=0.0, type=float)
 parser.add_argument('--gpu', default=0, type=int)
-parser.add_argument('--print_freq', default=10, type=int)
+parser.add_argument('--print_freq', default=5, type=int)
 parser.add_argument('--k', default=10, type=int)
 parser.add_argument('--item_num', default=57590, type=int)
 
@@ -58,7 +58,9 @@ print("\nThere are {0} users {1} items \n".format(usernum, itemnum))
 print("Average sequence length: {0}\n".format(cc / len(user_train)))
 print("Maximum length of sequence: {0}\n".format(max_len))
 
-f = open(os.path.join(args.dataset + '_' + args.train_dir, 'log.txt'), 'w')
+timestamp = int(time.time())
+
+f = open(os.path.join(args.dataset + '_' + args.train_dir, 'log_{}.txt'.format(timestamp)), 'w')
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 config.allow_soft_placement = True
@@ -76,6 +78,7 @@ T = 0.0
 t_test = evaluate(model, dataset, args, sess)
 t_valid = evaluate_valid(model, dataset, args, sess)
 print_result(0, 0.0, t_valid, t_test)
+print_result(0, 0.0, t_valid, t_test, f=f)
 # print("[0, 0.0, {0}, {1}, {2}, {3}],".format(t_valid[0], t_valid[1], t_test[0], t_test[1]))
 
 t0 = time.time()
@@ -106,6 +109,7 @@ for epoch in range(1, args.num_epochs + 1):
         #epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1])
         # print("[{0}, {1}, {2}, {3}, {4}, {5}],".format(epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1]))
         print_result(epoch, T, t_valid, t_test)
+        print_result(epoch, T, t_valid, t_test, f=f)
 
         #f.write(str(t_valid) + ' ' + str(t_test) + '\n')
         #f.flush()
