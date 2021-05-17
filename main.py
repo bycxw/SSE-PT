@@ -35,10 +35,11 @@ parser.add_argument('--print_freq', default=5, type=int)
 parser.add_argument('--k', default=10, type=int)
 parser.add_argument('--item_num', default=57590, type=int)
 
+timestamp = int(time.time())
 args = parser.parse_args()
 if not os.path.isdir(args.dataset + '_' + args.train_dir):
     os.makedirs(args.dataset + '_' + args.train_dir)
-with open(os.path.join(args.dataset + '_' + args.train_dir, 'args.txt'), 'w') as f:
+with open(os.path.join(args.dataset + '_' + args.train_dir, 'args_{}.txt'.format(timestamp)), 'w') as f:
     params = '\n'.join([str(k) + ',' + str(v) 
         for k, v in sorted(vars(args).items(), key=lambda x: x[0])])
     print(params)
@@ -58,7 +59,7 @@ print("\nThere are {0} users {1} items \n".format(usernum, itemnum))
 print("Average sequence length: {0}\n".format(cc / len(user_train)))
 print("Maximum length of sequence: {0}\n".format(max_len))
 
-timestamp = int(time.time())
+
 
 f = open(os.path.join(args.dataset + '_' + args.train_dir, 'log_{}.txt'.format(timestamp)), 'w')
 config = tf.ConfigProto()
